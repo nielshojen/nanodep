@@ -84,6 +84,19 @@ Be sure to create the storage tables with the [schema.sql](../storage/mysql/sche
 
 *Example:* `-storage mysql -dsn nanodep:nanodep/mydepdb`
 
+##### firestore storage backend
+
+* `-storage firestore`
+
+Configures the Firestore storage backed. The `-storage-dsn` must be set to the [GCP Project ID](https://support.google.com/googleapi/answer/7014113?hl=en).
+
+Otions available with the `-storage-options` flag:
+
+* `[database name]`
+  * This sets a named firestore database. If not set, the `(default)`database is used.
+
+*Example:* `-storage firestore -storage-dsn mygoogleproject -storage-options myfirestoredatabase`
+
 #### -version
 
 * print version
