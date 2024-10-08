@@ -365,14 +365,14 @@ func (s *FirestoreStorage) RetrieveTokenPKI(ctx context.Context, name string) ([
 
 	// Decode the document data
 	var data struct {
-		Cert []byte `firestore:"tokenpki_staging_cert_pem"`
-		Key  []byte `firestore:"tokenpki_staging_key_pem"`
+		Cert string `firestore:"tokenpki_staging_cert_pem"`
+		Key  string `firestore:"tokenpki_staging_key_pem"`
 	}
 	if err := doc.DataTo(&data); err != nil {
 		return nil, nil, fmt.Errorf("failed to decode token PKI: %w", err)
 	}
 
-	return data.Cert, data.Key, nil
+	return []byte(data.Cert), []byte(data.Key), nil
 }
 
 // RetrieveStagingTokenPKI reads and returns the PEM bytes for the staged DEP token exchange certificate and private key.
@@ -392,14 +392,14 @@ func (s *FirestoreStorage) RetrieveStagingTokenPKI(ctx context.Context, name str
 
 	// Decode the document data
 	var data struct {
-		TokenpkiStagingCertPem []byte `firestore:"tokenpki_staging_cert_pem"`
-		TokenpkiStagingKeyPem  []byte `firestore:"tokenpki_staging_key_pem"`
+		TokenpkiStagingCertPem string `firestore:"tokenpki_staging_cert_pem"`
+		TokenpkiStagingKeyPem  string `firestore:"tokenpki_staging_key_pem"`
 	}
 	if err := doc.DataTo(&data); err != nil {
 		return nil, nil, fmt.Errorf("failed to decode staging token PKI: %w", err)
 	}
 
-	return data.TokenpkiStagingCertPem, data.TokenpkiStagingKeyPem, nil
+	return []byte(data.TokenpkiStagingCertPem), []byte(data.TokenpkiStagingKeyPem), nil
 }
 
 // RetrieveCurrentTokenPKI reads and returns the PEM bytes for the current token exchange certificate and key.
@@ -419,12 +419,12 @@ func (s *FirestoreStorage) RetrieveCurrentTokenPKI(ctx context.Context, name str
 
 	// Decode the document data
 	var data struct {
-		TokenpkiCertPem []byte `firestore:"tokenpki_cert_pem"`
-		TokenpkiKeyPem  []byte `firestore:"tokenpki_key_pem"`
+		TokenpkiCertPem string `firestore:"tokenpki_cert_pem"`
+		TokenpkiKeyPem  string `firestore:"tokenpki_key_pem"`
 	}
 	if err := doc.DataTo(&data); err != nil {
 		return nil, nil, fmt.Errorf("failed to decode current token PKI: %w", err)
 	}
 
-	return data.TokenpkiCertPem, data.TokenpkiKeyPem, nil
+	return []byte(data.TokenpkiCertPem), []byte(data.TokenpkiKeyPem), nil
 }
