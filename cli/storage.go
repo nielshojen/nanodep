@@ -41,7 +41,6 @@ func Storage(storageName, dsn, options string) (storage.AllStorage, error) {
 		} else {
 			store, err = firestore.New(firestore.WithDSN(dsn))
 		}
-
 	case "inmem":
 		store = inmem.New()
 	case "mysql":
