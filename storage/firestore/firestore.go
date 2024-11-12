@@ -87,11 +87,7 @@ func isNotFoundError(err error) bool {
 
 // RetrieveAuthTokens reads the OAuth tokens from Firestore for the given name.
 func (s *FirestoreStorage) RetrieveAuthTokens(ctx context.Context, name string) (*client.OAuth1Tokens, error) {
-	if s.client == nil {
-		return nil, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -118,10 +114,6 @@ func (s *FirestoreStorage) RetrieveAuthTokens(ctx context.Context, name string) 
 
 // StoreAuthTokens saves the OAuth tokens to Firestore for the given name.
 func (s *FirestoreStorage) StoreAuthTokens(ctx context.Context, name string, tokens *client.OAuth1Tokens) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
 	// Convert tokens struct to a map and store it in Firestore
 	tokensMap, err := structToMap(tokens)
 	if err != nil {
@@ -152,11 +144,7 @@ func structToMap(v interface{}) (map[string]interface{}, error) {
 
 // RetrieveConfig reads the DEP config from Firestore for the given name.
 func (s *FirestoreStorage) RetrieveConfig(ctx context.Context, name string) (*client.Config, error) {
-	if s.client == nil {
-		return nil, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -178,10 +166,6 @@ func (s *FirestoreStorage) RetrieveConfig(ctx context.Context, name string) (*cl
 
 // StoreConfig saves the DEP config to Firestore for the given name.
 func (s *FirestoreStorage) StoreConfig(ctx context.Context, name string, config *client.Config) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
 	// Convert config struct to a map and store it in Firestore
 	data := map[string]interface{}{
 		"name":            name,
@@ -197,11 +181,7 @@ func (s *FirestoreStorage) StoreConfig(ctx context.Context, name string, config 
 
 // RetrieveAssignerProfile reads the assigner profile UUID and its timestamp from Firestore.
 func (s *FirestoreStorage) RetrieveAssignerProfile(ctx context.Context, name string) (profileUUID string, modTime time.Time, err error) {
-	if s.client == nil {
-		return "", time.Time{}, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -211,30 +191,27 @@ func (s *FirestoreStorage) RetrieveAssignerProfile(ctx context.Context, name str
 	}
 
 	data := doc.Data()
-
-	// Extract fields from the document data
-	if _, ok := data["assigner_profile_uuid"]; !ok {
-		profileUUID = data["assigner_profile_uuid"].(string)
+	if value, ok := data["assigner_profile_uuid"]; ok {
+		profileUUID = value.(string)
 	}
-	if _, ok := data["assigner_profile_uuid_at"]; !ok {
-		modTime, err = time.Parse(timestampFormat, data["assigner_profile_uuid"].(string))
+	if value, ok := data["assigner_profile_uuid_at"]; ok {
+		if modTime, ok = value.(time.Time); !ok {
+			err = fmt.Errorf("expected a time.Time for assigner_profile_uuid_at, but got %T", value)
+		}
 	}
 	return
 }
 
 // StoreAssignerProfile saves the assigner profile UUID and its timestamp to Firestore.
 func (s *FirestoreStorage) StoreAssignerProfile(ctx context.Context, name string, profileUUID string) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
-	// Prepare data and store it in Firestore
+	// Prepare data
 	data := map[string]interface{}{
 		"name":                     name,
 		"assigner_profile_uuid":    profileUUID,
 		"assigner_profile_uuid_at": time.Now(),
 	}
 
+	// Store document in Firestore
 	_, err := s.client.Collection(CollectionName).Doc(name).Set(ctx, data, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("failed to store assigner profile: %w", err)
@@ -244,11 +221,7 @@ func (s *FirestoreStorage) StoreAssignerProfile(ctx context.Context, name string
 
 // RetrieveCursor reads the cursor value from Firestore for the given name.
 func (s *FirestoreStorage) RetrieveCursor(ctx context.Context, name string) (string, error) {
-	if s.client == nil {
-		return "", fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -270,16 +243,13 @@ func (s *FirestoreStorage) RetrieveCursor(ctx context.Context, name string) (str
 
 // StoreCursor saves the cursor value to Firestore for the given name.
 func (s *FirestoreStorage) StoreCursor(ctx context.Context, name string, cursor string) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
-	// Prepare data and store it in Firestore
+	// Prepare data
 	data := map[string]interface{}{
 		"name":          name,
 		"syncer_cursor": cursor,
 	}
 
+	// Store document in Firestore
 	_, err := s.client.Collection(CollectionName).Doc(name).Set(ctx, data, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("failed to store cursor: %w", err)
@@ -289,17 +259,14 @@ func (s *FirestoreStorage) StoreCursor(ctx context.Context, name string, cursor 
 
 // StoreTokenPKI saves the PEM bytes for the token exchange certificate and key to Firestore.
 func (s *FirestoreStorage) StoreTokenPKI(ctx context.Context, name string, pemCert []byte, pemKey []byte) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
-	// Prepare data and store it in Firestore
+	// Prepare data
 	data := map[string]interface{}{
 		"name":                      name,
 		"tokenpki_staging_cert_pem": string(pemCert),
 		"tokenpki_staging_key_pem":  string(pemKey),
 	}
 
+	// Store document in Firestore
 	_, err := s.client.Collection(CollectionName).Doc(name).Set(ctx, data, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("failed to store token PKI: %w", err)
@@ -309,11 +276,7 @@ func (s *FirestoreStorage) StoreTokenPKI(ctx context.Context, name string, pemCe
 
 // UpstageTokenPKI copies the staging PKI certificate and key to the current PKI certificate and key.
 func (s *FirestoreStorage) UpstageTokenPKI(ctx context.Context, name string) error {
-	if s.client == nil {
-		return fmt.Errorf("Firestore client is nil")
-	}
-
-	// Retrieve the staging PKI from Firestore
+	// Retrieve the staging PKI
 	stagingDocRef := s.client.Collection(CollectionName).Doc(name)
 	stagingDoc, err := stagingDocRef.Get(ctx)
 	if err != nil {
@@ -350,11 +313,7 @@ func (s *FirestoreStorage) UpstageTokenPKI(ctx context.Context, name string) err
 
 // RetrieveTokenPKI reads the PEM bytes for the token exchange certificate and key from Firestore.
 func (s *FirestoreStorage) RetrieveTokenPKI(ctx context.Context, name string) ([]byte, []byte, error) {
-	if s.client == nil {
-		return nil, nil, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -377,11 +336,7 @@ func (s *FirestoreStorage) RetrieveTokenPKI(ctx context.Context, name string) ([
 
 // RetrieveStagingTokenPKI reads and returns the PEM bytes for the staged DEP token exchange certificate and private key.
 func (s *FirestoreStorage) RetrieveStagingTokenPKI(ctx context.Context, name string) ([]byte, []byte, error) {
-	if s.client == nil {
-		return nil, nil, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
@@ -404,11 +359,7 @@ func (s *FirestoreStorage) RetrieveStagingTokenPKI(ctx context.Context, name str
 
 // RetrieveCurrentTokenPKI reads and returns the PEM bytes for the current token exchange certificate and key.
 func (s *FirestoreStorage) RetrieveCurrentTokenPKI(ctx context.Context, name string) ([]byte, []byte, error) {
-	if s.client == nil {
-		return nil, nil, fmt.Errorf("Firestore client is nil")
-	}
-
-	// Fetch the document from Firestore
+	// Fetch document from Firestore
 	doc, err := s.client.Collection(CollectionName).Doc(name).Get(ctx)
 	if err != nil {
 		if isNotFoundError(err) {
