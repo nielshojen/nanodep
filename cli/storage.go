@@ -9,6 +9,7 @@ import (
 	"github.com/micromdm/nanodep/storage"
 	"github.com/micromdm/nanodep/storage/diskv"
 	"github.com/micromdm/nanodep/storage/file"
+	"github.com/micromdm/nanodep/storage/firestore"
 	"github.com/micromdm/nanodep/storage/inmem"
 	"github.com/micromdm/nanodep/storage/mysql"
 	"github.com/micromdm/nanodep/storage/pgsql"
@@ -32,6 +33,15 @@ func Storage(storageName, dsn, options string) (storage.AllStorage, error) {
 			dsn = "db"
 		}
 		store, err = file.New(dsn)
+	case "firestore":
+		if dsn == "" {
+			return nil, errors.New("storage-dsn must be set to google project id for firestore")
+		}
+		if options != "" {
+			store, err = firestore.New(firestore.WithDSN(dsn), firestore.WithDB(options))
+		} else {
+			store, err = firestore.New(firestore.WithDSN(dsn))
+		}
 	case "inmem":
 		store = inmem.New()
 	case "mysql":
